@@ -1,0 +1,357 @@
+Softwares used :
+
+Eclispe ADT
+MS SQL Server
+Library :
+jtds-1.2.7.jar
+
+Database table script :
+
+USE [mydatabase]
+GO
+/****** Object: Table [dbo].[countries] Script Date: 06/11/2015 23:13:08 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[countries](
+[ID] [int] IDENTITY(1,1) NOT NULL,
+[CountryName] [nvarchar](50) NOT NULL
+) ON [PRIMARY]
+
+
+
+
+
+
+Create a new xml layout file with name res>layout>countrylist.xml in your project and edit it as following :
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:background="#c0392b"
+android:orientation="vertical"
+android:weightSum="10" >
+
+<TextView
+android:id="@+id/lblheader"
+android:layout_width="match_parent"
+android:layout_height="0dp"
+android:layout_weight="1"
+android:padding="10dp"
+android:text="COUNTRIES : "
+android:textColor="#fff"
+android:textSize="15sp" />
+
+<ListView
+android:id="@+id/lstcountry"
+android:layout_width="match_parent"
+android:layout_height="0dp"
+android:layout_weight="8"
+android:divider="#252525"
+android:dividerHeight="1dp" >
+</ListView>
+
+<Button
+android:id="@+id/btnview"
+android:layout_width="match_parent"
+android:layout_height="0dp"
+android:layout_weight="1"
+android:text="VIEW"
+android:background="#fff"
+android:layout_marginLeft="10dp"
+android:layout_marginRight="10dp"
+android:textSize="20sp"
+android:textColor="#c0392b" >
+</Button>
+
+</LinearLayout>
+
+
+
+
+
+
+
+
+
+
+Create another .xml file with name res>layout>listtemplate.xml and edit it as following :
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:background="#c0392b"
+android:orientation="vertical" >
+
+<TextView
+android:id="@+id/lblcountryname"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:background="#fff"
+android:padding="10dp"
+android:text="HITRES"
+android:textColor="#252525"
+android:textSize="20sp" />
+
+</LinearLayout>
+
+This file will be used as template for our listview control.
+
+
+
+CODE
+
+Create a new class with name ConnectionClass.java and edit it as following :
+
+package com.example.temp;
+
+public class ConnectionClass {
+
+String ip;
+String classs;
+String db;
+String un;
+String password;
+
+public ConnectionClass() {
+classs = "net.sourceforge.jtds.jdbc.Driver";
+db = "MyDatabase";
+un = "sa";
+password = "123";
+ip = "192.168.0.103";
+}
+
+public ConnectionClass(String Ip, String Classs, String Db, String Un,
+String Password) {
+ip = Ip;
+classs = Classs;
+db = Db;
+un = Un;
+password = Password;
+}
+
+public String getip() {
+return ip;
+
+}
+
+public String getclasss() {
+return classs;
+
+}
+
+public String getdb() {
+return db;
+}
+
+public String getun() {
+return un;
+}
+
+public String getpassword() {
+return password;
+}
+
+public void setip(String Ip) {
+ip = Ip;
+}
+
+public void setdb(String Db) {
+db = Db;
+}
+
+public void setclasss(String Classs) {
+classs = Classs;
+}
+
+public void setun(String Un) {
+un = Un;
+}
+
+public void setpassword(String Password) {
+password = Password;
+}
+
+}
+Make another class with name CountryList.java and edit it as following :
+
+package com.example.temp;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import android.annotation.SuppressLint;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.os.StrictMode;
+import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class CountryList extends ActionBarActivity {
+
+TextView lblheader;
+Typeface font;
+Button btn;
+ListView lstcountry;
+SimpleAdapter ADAhere;
+
+/*********** CONNECTION DATABASE VARIABLES **************/
+
+ConnectionClass connectionclass;
+String usernameS;
+String datets;
+String call, db, un, passwords;
+Connection connect;
+ResultSet rs;
+
+@SuppressLint("NewApi")
+private Connection CONN(String _user, String _pass, String _DB,
+String _server) {
+StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+.permitAll().build();
+StrictMode.setThreadPolicy(policy);
+Connection conn = null;
+String ConnURL = null;
+try {
+
+Class.forName("net.sourceforge.jtds.jdbc.Driver");
+ConnURL = "jdbc:jtds:sqlserver://" + _server + ";"
++ "databaseName=" + _DB + ";user=" + _user + ";password="
++ _pass + ";";
+conn = DriverManager.getConnection(ConnURL);
+} catch (SQLException se) {
+Log.e("ERRO", se.getMessage());
+} catch (ClassNotFoundException e) {
+Log.e("ERRO", e.getMessage());
+} catch (Exception e) {
+Log.e("ERRO", e.getMessage());
+}
+return conn;
+}
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.countrylist);
+
+lblheader = (TextView) findViewById(R.id.lblheader);
+
+lstcountry = (ListView) findViewById(R.id.lstcountry);
+
+btn = (Button) findViewById(R.id.btnview);
+
+/************* CONNECTION DATABASE VARIABLES ***************/
+connectionclass = new ConnectionClass();
+call = connectionclass.getip();
+un = connectionclass.getun();
+passwords = connectionclass.getpassword();
+db = connectionclass.getdb();
+connect = CONN(un, passwords, db, call);
+btn.setOnClickListener(new View.OnClickListener() {
+
+@Override
+public void onClick(View v) {
+// TODO Auto-generated method stub
+String querycmd = "select * from Countries";
+try {
+
+Statement statement = connect.createStatement();
+rs = statement.executeQuery(querycmd);
+List<Map<String, String>> data = null;
+data = new ArrayList<Map<String, String>>();
+
+while (rs.next()) {
+Map<String, String> datanum = new HashMap<String, String>();
+datanum.put("A", rs.getString("CountryName"));
+data.add(datanum);
+}
+String[] fromwhere = { "A" };
+int[] viewswhere = { R.id.lblcountryname };
+ADAhere = new SimpleAdapter(CountryList.this, data,
+R.layout.listtemplate, fromwhere, viewswhere);
+lstcountry.setAdapter(ADAhere);
+
+} catch (SQLException e) {
+Toast.makeText(CountryList.this, e.getMessage().toString(),
+Toast.LENGTH_LONG).show();
+}
+
+}
+});
+
+lstcountry.setOnItemClickListener(new OnItemClickListener() {
+
+@Override
+public void onItemClick(AdapterView<?> parent, View view,
+int position, long id) {
+// TODO Auto-generated method stub
+HashMap<String, Object> obj = (HashMap<String, Object>) ADAhere
+.getItem(position);
+String VehicleId = (String) obj.get("A");
+Toast.makeText(CountryList.this, VehicleId, Toast.LENGTH_LONG)
+.show();
+}
+});
+
+}
+
+}
+
+
+
+
+
+AndroidManifest.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+package="com.example.temp"
+android:versionCode="1"
+android:versionName="1.0" >
+
+<uses-sdk
+android:minSdkVersion="8"
+android:targetSdkVersion="21" />
+
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+<application
+android:allowBackup="true"
+android:icon="@drawable/ic_launcher"
+android:label="@string/app_name"
+android:theme="@style/AppTheme" >
+<activity
+android:name=".CountryList"
+android:label="@string/app_name" >
+<intent-filter>
+<action android:name="android.intent.action.MAIN" />
+
+<category android:name="android.intent.category.LAUNCHER" />
+</intent-filter>
+</activity>
+</application>
+
+</manifest>
+Now run the application.
+
+
+
